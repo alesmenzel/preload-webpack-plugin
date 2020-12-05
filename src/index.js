@@ -19,124 +19,90 @@ const defaultOptions = require('./lib/default-options')
 const determineAsValue = require('./lib/determine-as-value')
 const doesChunkBelongToHTML = require('./lib/does-chunk-belong-to-html')
 const extractChunks = require('./lib/extract-chunks')
+const HTMLWebpackPlugin = require('html-webpack-plugin')
 
 class PreloadPlugin {
   constructor (options) {
-    this.options = Object.assign({}, defaultOptions, options)
+    this.options = {
+      rel: 'preload',
+      include: 'asyncChunks',
+      excludeHtmlNames: [],
+      fileBlacklist: [/\.map/],
+      ...options,
+    }
   }
 
   generateLinks (compilation, htmlPluginData) {
-    const options = this.options
+    const {include, fileWhitelist, fileBlacklist, rel, as: optionAs} = this.options
+
     const extractedChunks = extractChunks({
       compilation,
-      optionsInclude: options.include
+      optionsInclude: include
     })
-
-    const htmlChunks = options.include === 'allAssets'
-      // Handle all chunks.
-      ? extractedChunks
-      // Only handle chunks imported by this HtmlWebpackPlugin.
-      : extractedChunks.filter((chunk) => doesChunkBelongToHTML({
-        chunk,
-        compilation,
-        htmlAssetsChunks: Object.values(htmlPluginData.assets.chunks)
-      }))
 
     // Flatten the list of files.
-    const allFiles = htmlChunks.reduce((accumulated, chunk) => {
-      return accumulated.concat(chunk.files)
-    }, [])
-    const uniqueFiles = new Set(allFiles)
-    const filteredFiles = [...uniqueFiles].filter(file => {
-      return (
-        !this.options.fileWhitelist ||
-        this.options.fileWhitelist.some(regex => regex.test(file))
-      )
-    }).filter(file => {
-      return (
-        !this.options.fileBlacklist ||
-        this.options.fileBlacklist.every(regex => !regex.test(file))
-      )
-    })
-    // Sort to ensure the output is predictable.
-    const sortedFilteredFiles = filteredFiles.sort()
-
-    const links = []
+    const allFiles = htmlChunks.reduce((acc, chunk) => [...acc, ...chunk.files], [])
+    const uniqueFiles = [...new Set(allFiles)]
     const publicPath = compilation.outputOptions.publicPath || ''
-    for (const file of sortedFilteredFiles) {
-      const href = `${publicPath}${file}`
 
-      const attributes = {
-        href,
-        rel: options.rel
-      }
-
-      // If we're preloading this resource (as opposed to prefetching),
-      // then we need to set the 'as' attribute correctly.
-      if (options.rel === 'preload') {
-        attributes.as = determineAsValue({
-          href,
-          file,
-          optionsAs: options.as
-        })
-
+    const links = uniqueFiles
+      // Whitelist
+      .filter(file => {
+        return (
+          !fileWhitelist ||
+          fileWhitelist.some(regex => regex.test(file))
+        )
+      })
+      // Blacklist
+      .filter(file => {
+        return (
+          !fileBlacklist ||
+          fileBlacklist.every(regex => !regex.test(file))
+        )
+      })
+      // Sort to ensure the output is predictable.
+      .sort()
+      .map(file => {
+        const href = `${publicPath}${file}`
+        const link = {
+          tagName: 'link',
+          attributes: {
+            href,
+            rel,
+          }
+        }
+        // If we're preloading this resource (as opposed to prefetching),
+        // then we need to set the 'as' attribute correctly.
+        if (rel === 'preload') {
+          link.attributes.as = determineAsValue({
+            href,
+            file,
+            optionsAs: optionAs
+          })
+        }
         // On the off chance that we have a cross-origin 'href' attribute,
         // set crossOrigin on the <link> to trigger CORS mode. Non-CORS
         // fonts can't be used.
-        if (attributes.as === 'font') {
-          attributes.crossorigin = ''
+        if (link.attributes.as === 'font') {
+          link.attributes.crossorigin = ''
         }
-      }
-
-      links.push({
-        tagName: 'link',
-        attributes
+        return link
       })
-    }
 
-    this.resourceHints = links
-    return htmlPluginData
+    htmlPluginData.headTags = [...links, ...htmlPluginData.headTags]
   }
 
   apply (compiler) {
-    const skip = data => {
-      const htmlFilename = data.plugin.options.filename
-      const exclude = this.options.excludeHtmlNames
-      const include = this.options.includeHtmlNames
-      return (
-        (include && !(include.includes(htmlFilename))) ||
-        (exclude && exclude.includes(htmlFilename))
-      )
-    }
+    const {name} = this.constructor
 
     compiler.hooks.compilation.tap(
-      this.constructor.name,
+      name,
       compilation => {
-        compilation.hooks.htmlWebpackPluginBeforeHtmlProcessing.tap(
-          this.constructor.name,
-          (htmlPluginData) => {
-            if (skip(htmlPluginData)) {
-              return
-            }
-            this.generateLinks(compilation, htmlPluginData)
-          }
-        )
+        const htmlHooks = HTMLWebpackPlugin.getHooks(compilation)
 
-        compilation.hooks.htmlWebpackPluginAlterAssetTags.tap(
-          this.constructor.name,
-          (htmlPluginData) => {
-            if (skip(htmlPluginData)) {
-              return
-            }
-            if (this.resourceHints) {
-              htmlPluginData.head = [
-                ...this.resourceHints,
-                ...htmlPluginData.head
-              ]
-            }
-            return htmlPluginData
-          }
-        )
+        htmlHooks.afterTemplateExecution.tap(name, (htmlPluginData) => {
+          this.generateLinks(compilation, htmlPluginData)
+        })
       }
     )
   }
