@@ -15,9 +15,7 @@
  * limitations under the License.
  */
 
-const defaultOptions = require('./lib/default-options')
 const determineAsValue = require('./lib/determine-as-value')
-const doesChunkBelongToHTML = require('./lib/does-chunk-belong-to-html')
 const extractChunks = require('./lib/extract-chunks')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
 
@@ -28,14 +26,14 @@ class PreloadPlugin {
       include: 'asyncChunks',
       excludeHtmlNames: [],
       fileBlacklist: [/\.map/],
-      ...options,
+      ...options
     }
   }
 
   generateLinks (compilation, htmlPluginData) {
-    const {include, fileWhitelist, fileBlacklist, rel, as: optionAs} = this.options
+    const { include, fileWhitelist, fileBlacklist, rel, as: optionAs } = this.options
 
-    const extractedChunks = extractChunks({
+    const htmlChunks = extractChunks({
       compilation,
       optionsInclude: include
     })
@@ -68,7 +66,7 @@ class PreloadPlugin {
           tagName: 'link',
           attributes: {
             href,
-            rel,
+            rel
           }
         }
         // If we're preloading this resource (as opposed to prefetching),
@@ -90,10 +88,11 @@ class PreloadPlugin {
       })
 
     htmlPluginData.headTags = [...links, ...htmlPluginData.headTags]
+    return htmlPluginData
   }
 
   apply (compiler) {
-    const {name} = this.constructor
+    const { name } = this.constructor
 
     compiler.hooks.compilation.tap(
       name,
@@ -101,7 +100,7 @@ class PreloadPlugin {
         const htmlHooks = HTMLWebpackPlugin.getHooks(compilation)
 
         htmlHooks.afterTemplateExecution.tap(name, (htmlPluginData) => {
-          this.generateLinks(compilation, htmlPluginData)
+          return this.generateLinks(compilation, htmlPluginData)
         })
       }
     )
