@@ -4,7 +4,7 @@
   "description": "A webpack plugin for injecting <link rel='preload|prefecth'> into HtmlWebpackPlugin",
   "author": "Ales Menzel <alesmenzel@gmail.com> (https://github.com/alesmenzel)",
   "license": "MIT",
-  "main": "./src/index.js",
+  "main": "./src/preload-webpack-plugin.js",
   "types": "./index.d.ts",
   "repository": {
     "type": "git",
@@ -24,11 +24,11 @@
     "prepublishOnly": "npm run test"
   },
   "peerDependencies": {
-    "html-webpack-plugin": ">=4.0.0",
+    "html-webpack-plugin": ">=5.0.0",
     "webpack": ">=5.0.0"
   },
   "devDependencies": {
-    "html-webpack-plugin": "^5.0.0-beta.6",
+    "html-webpack-plugin": "^5.0.0",
     "webpack": "^5.10.0"
   }
 }

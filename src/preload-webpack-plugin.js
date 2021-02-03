@@ -1,8 +1,8 @@
 const { determineAsValue, extractChunks } = require('./utils')
-const HTMLWebpackPlugin = require('html-webpack-plugin')
 
-class PreloadPlugin {
-  constructor (options) {
+class PreloadWebpackPlugin {
+  constructor (HTMLWebpackPlugin, options) {
+    this.HTMLWebpackPlugin = HTMLWebpackPlugin
     this.options = {
       rel: 'preload',
       include: 'initial',
@@ -70,14 +70,13 @@ class PreloadPlugin {
   }
 
   apply (compiler) {
-    const { name } = this.constructor
+    const name = 'PreloadWebpackPlugin'
+    const HTMLWebpackPlugin = this.HTMLWebpackPlugin
 
     compiler.hooks.compilation.tap(
       name,
       compilation => {
-        const htmlHooks = HTMLWebpackPlugin.getHooks(compilation)
-
-        htmlHooks.afterTemplateExecution.tap(name, (htmlPluginData) => {
+        HTMLWebpackPlugin.getHooks(compilation).afterTemplateExecution.tap(name, (htmlPluginData) => {
           return this.generateLinks(compilation, htmlPluginData)
         })
       }
@@ -85,4 +84,4 @@ class PreloadPlugin {
   }
 }
 
-module.exports = PreloadPlugin
+module.exports = PreloadWebpackPlugin

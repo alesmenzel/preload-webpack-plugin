@@ -1,4 +1,5 @@
 import { Compiler, WebpackPluginInstance } from 'webpack';
+import HtmlWebpackPlugin from "html-webpack-plugin"
 
 declare namespace PreloadWebpackPlugin {
   interface PreloadWebpackPluginOptions {
@@ -8,11 +9,9 @@ declare namespace PreloadWebpackPlugin {
      * - `asyncChunks` - Only Async chunks.
      * - `allChunks` - Async chunks, vendor chunks, normal chunks.
      * - `allAssets` - Every asset, regardless of which chunk it's in.
-     *
-     * Chunks - allows to filter chunks by their names
      * @default 'initial'
      */
-    include?: string | { type?: string, chunks?: string[], entries?: string[] };
+    include?: string;
 
     /**
      * Chunks to preload
@@ -40,7 +39,7 @@ declare namespace PreloadWebpackPlugin {
 }
 
 declare class PreloadWebpackPlugin implements WebpackPluginInstance {
-  constructor(opts?: PreloadWebpackPlugin.PreloadWebpackPluginOptions);
+  constructor(HtmlWebpackPlugin: HtmlWebpackPlugin, opts?: PreloadWebpackPlugin.PreloadWebpackPluginOptions);
   apply: (compiler: Compiler) => void;
 }
 
