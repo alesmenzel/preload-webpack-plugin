@@ -17,12 +17,7 @@
     "preload",
     "resource hints"
   ],
-  "scripts": {
-    "lint": "eslint --format=codeframe .",
-    "test": "npm run lint && jasmine test/unit/* test/e2e/index.js",
-    "coverage": "nyc npm run test",
-    "prepublishOnly": "npm run test"
-  },
+  "scripts": {},
   "peerDependencies": {
     "html-webpack-plugin": ">=5.0.0",
     "webpack": ">=5.0.0"
