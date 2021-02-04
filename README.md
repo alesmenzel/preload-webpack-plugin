@@ -13,7 +13,7 @@ npm install --save-dev @alesmenzel/preload-webpack-plugin
 ## Usage
 
 ```js
-const PreloadWebpackPlugin = require('preload-webpack-plugin');
+const PreloadWebpackPlugin = require('@alesmenzel/preload-webpack-plugin');
 
 // ...
 
