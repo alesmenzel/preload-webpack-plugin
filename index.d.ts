@@ -16,13 +16,13 @@ declare namespace PreloadWebpackPlugin {
     /**
      * Chunks to preload
      */
-    fileWhitelist?: [];
+    fileWhitelist?: RegExp[];
 
     /**
      * Chunks NOT to preload
      * @default [/\.map/]
      */
-    fileBlacklist?: [];
+    fileBlacklist?: RegExp[];
 
     /**
      * Browser hint, e.g. 'preload'
@@ -38,8 +38,10 @@ declare namespace PreloadWebpackPlugin {
   }
 }
 
+type htmlWebpackPlugin = typeof HtmlWebpackPlugin
+
 declare class PreloadWebpackPlugin implements WebpackPluginInstance {
-  constructor(HtmlWebpackPlugin: HtmlWebpackPlugin, opts?: PreloadWebpackPlugin.PreloadWebpackPluginOptions);
+  constructor(HtmlWebpackPlugin: htmlWebpackPlugin, opts?: PreloadWebpackPlugin.PreloadWebpackPluginOptions);
   apply: (compiler: Compiler) => void;
 }
 
