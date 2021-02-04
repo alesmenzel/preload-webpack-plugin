@@ -1,6 +1,6 @@
 {
   "name": "@alesmenzel/preload-webpack-plugin",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "A webpack plugin for injecting <link rel='preload|prefecth'> into HtmlWebpackPlugin",
   "author": "Ales Menzel <alesmenzel@gmail.com> (https://github.com/alesmenzel)",
   "license": "MIT",
